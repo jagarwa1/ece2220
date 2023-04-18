@@ -1,0 +1,1 @@
+aimed to implement huffman encoding/decoding but DOES NOT WORK so i gave up
