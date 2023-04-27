@@ -54,11 +54,15 @@ int main(){
     keypad(stdscr, true);   // get key inputs
     start_color();			// colors
 
+    // open savefile
+    FILE* saveFile = fopen("highScore.txt", "r");
 
     int inputDir, playAgain;
     bool valid = true;
-    int score = 0, high = 0;
     bool haveWon = false;
+
+    int score = 0, high;
+    fscanf(saveFile, "%d", &high);
 
     int grid[4][4];
     for (int i = 0; i < 16; i++)
@@ -152,7 +156,15 @@ int main(){
                     // if they do not want to play again
                     else if(playAgain == 110){ // if no new game then exit
                         endwin();
-                        printf("Score: %d   High: %d \nExiting...\n", score, high);
+                        saveFile = freopen("highScore.txt", "w", saveFile);
+                        if (score > high){
+                            printf("NEW HIGH SCORE: %d\nExiting...\n", score);
+                            fprintf(saveFile, "%d", score);
+                        } 
+                        else {
+                            printf("Score: %d   High: %d \nExiting...\n", score, high);
+                            fprintf(saveFile, "%d", high);
+                        }
                         exit(1);
                     }
                 }
@@ -202,7 +214,15 @@ int main(){
                 // if they do not want to play again
                 else if (playAgain == 110) { // display exit message and then exit program
                     endwin();
-                    printf("Score: %d   High: %d \nExiting...\n", score, high);
+                    saveFile = freopen("highScore.txt", "w", saveFile);
+                    if (score > high){
+                        printf("NEW HIGH SCORE: %d\nExiting...\n", score);
+                        fprintf(saveFile, "%d", score);
+                    } 
+                    else {
+                        printf("Score: %d   High: %d \nExiting...\n", score, high);
+                        fprintf(saveFile, "%d", high);
+                    }
                     exit(1);
                 }
             }
@@ -210,7 +230,15 @@ int main(){
 
     }// end of while loop
     endwin();
-    printf("Score: %d   High: %d \nExiting...\n", score, high);
+    saveFile = freopen("highScore.txt", "w", saveFile);
+    if (score > high){
+        printf("NEW HIGH SCORE: %d\nExiting...\n", score);
+        fprintf(saveFile, "%d", score);
+    } 
+    else {
+        printf("Score: %d   High: %d \nExiting...\n", score, high);
+        fprintf(saveFile, "%d", high);
+    }
     exit(1);
     return 0;
 }// end of main
