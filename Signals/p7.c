@@ -1,5 +1,5 @@
 /*
-Bitmap Files
+Signals Submarine Game
 Jai Agarwal
 ECE 2220 Prog 7
 Purpose        -
@@ -13,8 +13,6 @@ Known Bugs     -
 #include <unistd.h>
 #include <time.h>
 
-void clear(FILE* fpt) { fprintf(fpt, "\033[H\033[J"); }
-
 struct SUB{ int distance, fuel, payload;};
 
 // child operation
@@ -22,7 +20,7 @@ void spawnSub(char *Terminal);
 
 int main (int argc, char* arv[]) {
 
-    FILE* fpt;
+    FILE* fptr;
     char temp[15];
     char **availableTerms = (char**)malloc(140);
     int itemCount = 0;
@@ -54,8 +52,8 @@ int main (int argc, char* arv[]) {
 
     availableTerms = realloc(availableTerms, itemCount*sizeof(char*));
 
-    fpt = fopen(parentTTY, "w");
-    fprintf(fpt, "START DATE OF MISSION : %s\n", ctime(&t));
+    fptr = fopen(parentTTY, "w");
+    fprintf(fptr, "START DATE OF MISSION : %s\n", ctime(&t));
 
 
     if (fork() != 0){
@@ -76,10 +74,11 @@ int main (int argc, char* arv[]) {
 void spawnSub(char *Terminal) {
     struct SUB localSub;
 
-    FILE* fpt = fopen(Terminal, "w");
+    FILE* fptr = fopen(Terminal, "w");
     srand(time(0) + getpid());
 
-    clear(fpt);
+    fprintf(fptr, "\033[H\033[J");
+
 
     // initialize distance from base to 0
     localSub.distance = 0;
@@ -90,10 +89,10 @@ void spawnSub(char *Terminal) {
     // initialize payload between 6 and 10 missiles
     localSub.payload = (rand() % (10 - 6 + 1)) + 6;
 
-    fprintf(fpt, "I am local sub %d\n", getpid());
-    fprintf(fpt, "I am %d miles away from base\n", localSub.distance);
-    fprintf(fpt, "I have %d gallons of fuel\n", localSub.fuel);
-    fprintf(fpt, "I have %d ballistic missiles\n", localSub.payload);
+    fprintf(fptr, "I am local sub %d\n", getpid());
+    fprintf(fptr, "I am %d miles away from base\n", localSub.distance);
+    fprintf(fptr, "I have %d gallons of fuel\n", localSub.fuel);
+    fprintf(fptr, "I have %d ballistic missiles\n", localSub.payload);
 
 
     /*  use alarm() or setitimer and then:
@@ -107,6 +106,6 @@ void spawnSub(char *Terminal) {
 
 
     
-    fclose(fpt);
+    fclose(fptr);
 }
 
