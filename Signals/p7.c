@@ -11,16 +11,25 @@ Known Bugs     -
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <time.h>
 
-struct SUB{ int distance, fuel, payload;};
+
+// GLOBALS
+struct SUB{int distance, fuel, payload;}SUB;
+typedef void (*fptr)();
+FILE* global_fpt;
 
 // child operation
 void spawnSub(char *Terminal);
 
-int main (int argc, char* arv[]) {
+// handle the alarm
+void alarmHandler(int signum);
 
-    FILE* fptr;
+void printReport();
+
+int main (int argc, char* arv[]) {
+    FILE* outFile;
     char temp[15];
     char **availableTerms = (char**)malloc(140);
     int itemCount = 0;
@@ -52,14 +61,14 @@ int main (int argc, char* arv[]) {
 
     availableTerms = realloc(availableTerms, itemCount*sizeof(char*));
 
-    fptr = fopen(parentTTY, "w");
-    fprintf(fptr, "START DATE OF MISSION : %s\n", ctime(&t));
+    outFile = fopen(parentTTY, "w");
+    fprintf(outFile, "START DATE OF MISSION : %s\n", ctime(&t));
 
 
     if (fork() != 0){
         if (fork() != 0){
             if (fork() != 0){
-                
+               // do  something 
             }
             else spawnSub(availableTerms[0]); 
         }
@@ -72,40 +81,60 @@ int main (int argc, char* arv[]) {
 
 
 void spawnSub(char *Terminal) {
-    struct SUB localSub;
-
-    FILE* fptr = fopen(Terminal, "w");
+    FILE* outFile = fopen(Terminal, "w");
     srand(time(0) + getpid());
-
-    fprintf(fptr, "\033[H\033[J");
-
+    signal(SIGALRM, (fptr)alarmHandler);
 
     // initialize distance from base to 0
-    localSub.distance = 0;
+    SUB.distance = 0;
 
     // initialize fuel between 1000 and 5000
-    localSub.fuel = (rand() % (5000 - 1000 + 1)) + 1000;
+    SUB.fuel = (rand() % (5000 - 1000 + 1)) + 1000;
 
     // initialize payload between 6 and 10 missiles
-    localSub.payload = (rand() % (10 - 6 + 1)) + 6;
-
-    fprintf(fptr, "I am local sub %d\n", getpid());
-    fprintf(fptr, "I am %d miles away from base\n", localSub.distance);
-    fprintf(fptr, "I have %d gallons of fuel\n", localSub.fuel);
-    fprintf(fptr, "I have %d ballistic missiles\n", localSub.payload);
-
-
-    /*  use alarm() or setitimer and then:
+    SUB.payload = (rand() % (10 - 6 + 1)) + 6;
     
-        - decrement fuel by num between 100 and 200 each sec
-        - increment distance by 5 to 10 every two seconds if going towards
-            and decrements distance by 3 to 8 if returning to base
-        - report military time, fuel amount, missiles left, and distance from base every 3 seconds
-            in each terminal
-    */
+    global_fpt = outFile;
 
+    // use alarm()
+    while(SUB.fuel > 0){
+        alarm(3);
+        pause();
+    }
+    fprintf(global_fpt, "I ran out out fuel!!!\n");
 
     
-    fclose(fptr);
+    fclose(outFile);
 }
 
+void alarmHandler(int signum){
+    // - decrement fuel by num between 100 and 200 each sec
+    // - increment distance by 5 to 10 every two seconds if going towards
+    //     and decrements distance by 3 to 8 if returning to base
+    // - report military time, fuel amount, missiles left, and distance from base every 3 seconds
+    //     in each terminal
+
+    for (int i = 0; i < 3; i++) SUB.fuel -= (rand() % (200 - 100)) + 100;
+    for (int i = 0; i < 2; i++) SUB.distance += (rand() % (10 - 5)) + 5;
+    printReport();    
+
+}
+
+
+void printReport(){
+    time_t raw_time;
+    struct tm *time_ptr;
+    char timeString[30];
+
+    time(&raw_time);
+    time_ptr = localtime(&raw_time);
+    strftime(timeString, 30, "%H:%M:%S", time_ptr);
+    
+    
+    fprintf(global_fpt, "\033[H\033[J"); // clear terminal
+    fprintf(global_fpt, "Current time:  %s\n", timeString);
+    fprintf(global_fpt, "-------I am sub %d-------\n", getpid());
+    fprintf(global_fpt, "I am %d miles away from base\n", SUB.distance);
+    fprintf(global_fpt, "I have %d ballistic missiles\n", SUB.payload);
+    fprintf(global_fpt, "I have %d gallons of fuel\n", SUB.fuel);
+}
