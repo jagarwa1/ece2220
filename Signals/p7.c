@@ -19,12 +19,15 @@ Known Bugs     -
 struct SUB{int distance, fuel, payload;}SUB;
 typedef void (*fptr)();
 FILE* global_fpt;
+int global_count;
 
 // child operation
 void spawnSub(char *Terminal);
 
-// handle the alarm
-void alarmHandler(int signum);
+// handle the alarm for 1, 2, 3 sec
+void HANDLER_1(int signum);
+void HANDLER_2(int signum);
+void HANDLER_3(int signum);
 
 void printReport();
 
@@ -83,7 +86,6 @@ int main (int argc, char* arv[]) {
 void spawnSub(char *Terminal) {
     FILE* outFile = fopen(Terminal, "w");
     srand(time(0) + getpid());
-    signal(SIGALRM, (fptr)alarmHandler);
 
     // initialize distance from base to 0
     SUB.distance = 0;
@@ -95,11 +97,22 @@ void spawnSub(char *Terminal) {
     SUB.payload = (rand() % (10 - 6 + 1)) + 6;
     
     global_fpt = outFile;
+    global_count = 0;
 
     // use alarm()
     while(SUB.fuel > 0){
-        alarm(3);
-        pause();
+        if (fork() == 0){
+            signal(SIGALRM, (fptr)HANDLER_1);
+            alarm(1);
+            if (fork() == 0){
+                signal(SIGALRM, (fptr)HANDLER_2);
+                alarm(2);
+                if (fork() == 0){
+                    signal(SIGALRM, (fptr)HANDLER_3);
+                    alarm(3);
+                }
+            }
+        }
     }
     fprintf(global_fpt, "I ran out out fuel!!!\n");
 
@@ -107,18 +120,30 @@ void spawnSub(char *Terminal) {
     fclose(outFile);
 }
 
-void alarmHandler(int signum){
+void HANDLER_1(int signum){
     // - decrement fuel by num between 100 and 200 each sec
     // - increment distance by 5 to 10 every two seconds if going towards
     //     and decrements distance by 3 to 8 if returning to base
     // - report military time, fuel amount, missiles left, and distance from base every 3 seconds
     //     in each terminal
 
-    for (int i = 0; i < 3; i++) SUB.fuel -= (rand() % (200 - 100)) + 100;
-    for (int i = 0; i < 2; i++) SUB.distance += (rand() % (10 - 5)) + 5;
-    printReport();    
+    SUB.fuel -= (rand() % (200 - 100)) + 100;
+}
+
+void HANDLER_2(int signum){
+    int towardsBase = 1;
+
+    if (towardsBase)
+        SUB.distance += (rand() % (10 - 5)) + 5;
+    else
+        SUB.distance += (rand() % (8 - 3)) + 3;
 
 }
+
+void HANDLER_3(int signum){
+    printReport();    
+}
+
 
 
 void printReport(){
