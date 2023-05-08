@@ -46,7 +46,7 @@ bool gameWon(int board[4][4]);
 
 void chooseColor(int, WINDOW*);
 
-int main(){	
+int main() {	
     curs_set(0);
     initscr();			    // start curses mode
     cbreak();			    // get input immediately and allow for interrupts
@@ -165,7 +165,7 @@ int main(){
                             printf("Score: %d   High: %d \nExiting...\n", score, high);
                             fprintf(saveFile, "%d", high);
                         }
-                        exit(1);
+                        exit(0);
                     }
                 }
 
@@ -223,7 +223,7 @@ int main(){
                         printf("Score: %d   High: %d \nExiting...\n", score, high);
                         fprintf(saveFile, "%d", high);
                     }
-                    exit(1);
+                    exit(0);
                 }
             }
         } // end of if (valid)
@@ -239,7 +239,7 @@ int main(){
         printf("Score: %d   High: %d \nExiting...\n", score, high);
         fprintf(saveFile, "%d", high);
     }
-    exit(1);
+    exit(0);
     return 0;
 }// end of main
 
